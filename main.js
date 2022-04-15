@@ -34,7 +34,6 @@ getTransactions = async() => {
         address: "0x401C13C5E43e90b3A2DB0B33123286211e546105",
       };
       const transactions = await Moralis.Web3API.account.getTransactions(options);
-      console.log(transactions)
 
       if(transactions.total > 0){
           let table = `
@@ -59,8 +58,8 @@ getTransactions = async() => {
               <tr>
                   <td><a href='https://rinkeby.etherscan.io/tx/${t.hash}' target="_blank" rel="noopener noreferrer">${t.hash}</a></td>
                   <td><a href='https://rinkeby.etherscan.io/block/${t.block_number}' target="_blank" rel="noopener noreferrer">${t.block_number}</a></td>
-                  <td>${t.block_timestamp}</td>
-                  <td>${t.from_address}</td>
+                  <td>${millisecondsToTime(Date.parse(new Date()) -Date.parse(t.block_timestamp))}</td>
+                  <td>${t.from_address == Moralis.User.current().get('ethAddress') ? 'Outgoing' : 'Incoming'}</td>
                   <td>${((t.gas * t.gas_price) / 1e18).toFixed(5)} ETH</td>
                   <td>${t.value / 1e18} ETH</td>
               </tr>
@@ -70,10 +69,65 @@ getTransactions = async() => {
       }
 }
 
+getBalances = async () => {
+    const ethBalance = await Moralis.Web3API.account.getNativeBalance();
+    const ropstenBalance = await Moralis.Web3API.account.getNativeBalance({chain: "ropsten"});
+    const rinkebyBalance = await Moralis.Web3API.account.getNativeBalance({chain: "rinkeby"});
+
+    let content = document.querySelector('#userBalances').innerHTML = `
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Token</th>
+                <th scope="col">Balance</th>
+            </tr>
+        </thead>
+            <tbody>
+                <tr>
+                    <th>Ether</th>
+                    <td>${(ethBalance.balance / 1e18).toFixed(5)} ETH</td>
+                </tr>
+                <tr>
+                    <th>Ropsten</th>
+                    <td>${(ropstenBalance.balance / 1e18).toFixed(5)} ETH</td>
+                </tr>
+                <tr>
+                    <th>Rinkeby</th>
+                    <td>${(rinkebyBalance.balance / 1e18).toFixed(5)} ETH</td>
+                </tr>
+            </tbody>
+        </table>
+    `
+}
+
+getNFTs = async () => {
+    let nfts = await Moralis.Web3API.account.getNFTs({chain: "rinkeby"});
+
+    let tableOfNFTs = document.querySelector('#tableOfNFTs');
+
+    if(nfts.result.length > 0){
+        nfts.result.forEach(n => {
+            let metadata = JSON.parse(n.metadata);
+            console.log(metadata)
+            let content = `
+            <div class="card col-md-3" padding="300px">
+            <img src="${metadata.image}" class="card-img-top" heigth=300">
+                <div class="card-body">
+                    <h5 class="card-title">${metadata.name}</h5>
+                    <p class="card-text">${metadata.description}</p>
+                </div>
+            </div>
+            `
+
+            tableOfNFTs.innerHTML += content;
+        })
+    }
+}
+
 millisecondsToTime = (ms) => {
-    let minutes = (ms / (1000 * 60));
-    let hours = (ms / (1000 * 60 * 60))
-    let days = (ms / (1000 * 60 * 60 * 24))
+    let minutes = Math.floor(ms / (1000 * 60));
+    let hours = Math.floor(ms / (1000 * 60 * 60));
+    let days = Math.floor(ms / (1000 * 60 * 60 * 24));
 
     if(days < 1){
         if(hours < 1){
@@ -96,6 +150,10 @@ if(document.querySelector('#get-transactions-link') != null){
     document.querySelector('#get-transactions-link').onclick = getTransactions;
 }
 
-//get-transactions-link
-//get-balances-link
-//get-nfts-link
+if(document.querySelector('#get-balances-link') != null){
+    document.querySelector('#get-balances-link').onclick = getBalances;
+}
+
+if(document.querySelector('#get-nfts-link') != null){
+    document.querySelector('#get-nfts-link').onclick = getNFTs;
+}
