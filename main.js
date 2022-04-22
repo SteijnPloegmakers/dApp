@@ -5,7 +5,7 @@ const serverUrl = "https://requdfa5ov5t.usemoralis.com:2053/server";
 const appId = "trmV7FEen6yLodqryJKieWzaDIbIezTxBdy7FhHs";
 Moralis.start({ serverUrl, appId });
 
-let homepage = "http://127.0.0.1:5500/index.html"
+let homepage = "https://requdfa5ov5t.usemoralis.com"
 
 if (Moralis.User.current() == null && window.location.href != homepage) {
     document.querySelector('body').style.display = 'none';
