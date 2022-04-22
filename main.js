@@ -9,7 +9,7 @@ let homepage = "https://requdfa5ov5t.usemoralis.com"
 
 if (Moralis.User.current() == null && window.location.href != homepage) {
     document.querySelector('body').style.display = 'none';
-    window.location.href = 'index.html';
+    window.location.href = homepage;
 }  
 
 login = async() => {
